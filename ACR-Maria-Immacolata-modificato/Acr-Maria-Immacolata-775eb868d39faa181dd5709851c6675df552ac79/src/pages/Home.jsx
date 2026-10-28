@@ -37,6 +37,7 @@ export default function Home() {
     }
 
     const ids = classiBase.map((c) => c.id)
+
     let firmeOggi = []
     if (ids.length) {
       const { data } = await supabase
@@ -64,23 +65,69 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '40px' }}>
+      
+      {/* Header Band */}
       <div className="acr-band" style={{ padding: '36px 24px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div className="acr-display" style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>Ciao, {primoNome}</div>
-            {educatore?.moderatore && <span className="mod-badge"><ShieldCheck size={13} /> MODERATORE</span>}
+            <div className="acr-display" style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>
+              Ciao, {primoNome}
+            </div>
+            {educatore?.moderatore && (
+              <span className="mod-badge">
+                <ShieldCheck size={13} /> MODERATORE
+              </span>
+            )}
           </div>
-          <div style={{ opacity: 0.85, fontSize: '13px', marginTop: '4px', fontFamily: 'Inter, sans-serif' }}>Le tue classi e registri di oggi</div>
+          <div style={{ opacity: 0.85, fontSize: '13px', marginTop: '4px', fontFamily: 'Inter, sans-serif' }}>
+            Le tue classi e registri di oggi
+          </div>
         </div>
-        <button onClick={() => { logout(); navigate('/login') }} style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 'var(--radius-sm)', color: '#FFFFFF', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Esci">
+
+        <button
+          onClick={() => { logout(); navigate('/login') }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: 'var(--radius-sm)',
+            color: '#FFFFFF',
+            padding: '10px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 160ms ease'
+          }}
+          title="Esci dal portale"
+        >
           <LogOut size={18} />
         </button>
       </div>
 
       <div style={{ maxWidth: '680px', margin: '24px auto 0', padding: '0 var(--page-padding)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* Pulsante Sezione Aggiunta per Moderatori */}
         {educatore?.moderatore && (
-          <button onClick={() => navigate('/aggiunta')} className="acr-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', background: 'linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%)', color: '#FFFFFF', border: 'none', width: '100%', textAlign: 'left' }}>
-            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '10px', borderRadius: 'var(--radius-sm)', display: 'grid', placeItems: 'center' }}><Settings size={22} color="#FFFFFF" /></div>
+          <button
+            onClick={() => navigate('/aggiunta')}
+            className="acr-card"
+            style={{
+              padding: '18px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              cursor: 'pointer',
+              background: 'linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              boxShadow: 'var(--shadow-purple-btn)',
+              width: '100%',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '10px', borderRadius: 'var(--radius-sm)', display: 'grid', placeItems: 'center' }}>
+              <Settings size={22} color="#FFFFFF" />
+            </div>
             <div>
               <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '700', fontSize: '16px' }}>Pannello Gestione</div>
               <div style={{ fontSize: '13px', opacity: 0.9, marginTop: '2px' }}>Classi, educatori, ragazzi e correzioni di sistema</div>
@@ -88,6 +135,7 @@ export default function Home() {
           </button>
         )}
 
+        {/* Stato di Caricamento con Skeleton */}
         {caricando && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {[1, 2].map((n) => (
@@ -99,6 +147,7 @@ export default function Home() {
           </div>
         )}
 
+        {/* Stato Vuoto */}
         {!caricando && classi.length === 0 && (
           <div className="acr-card" style={{ padding: '40px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <BookOpen size={32} color="var(--ink-soft)" />
@@ -107,14 +156,43 @@ export default function Home() {
           </div>
         )}
 
+        {/* Lista Classi */}
         {!caricando && classi.map((c) => (
-          <button key={c.id} onClick={() => navigate(`/classe/${c.id}`)} className="acr-card" style={{ display: 'flex', overflow: 'hidden', textAlign: 'left', cursor: 'pointer', border: '1px solid var(--rule)', padding: 0, width: '100%' }}>
-            <div className="acr-tab" style={{ background: c.firmataDaMe ? 'var(--sage)' : 'var(--purple)', width: '6px' }} />
+          <button
+            key={c.id}
+            onClick={() => navigate(`/classe/${c.id}`)}
+            className="acr-card"
+            style={{
+              display: 'flex',
+              overflow: 'hidden',
+              textAlign: 'left',
+              cursor: 'pointer',
+              border: '1px solid var(--rule)',
+              padding: 0,
+              width: '100%'
+            }}
+          >
+            {/* Tab laterale colorata */}
+            <div
+              className="acr-tab"
+              style={{
+                background: c.firmataDaMe ? 'var(--sage)' : 'var(--purple)',
+                width: '6px'
+              }}
+            />
+
             <div style={{ flex: 1, padding: '18px 20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div className="acr-display" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--anthracite)' }}>{c.nome}</div>
-                <span className={`acr-mono ${c.firmataDaMe ? 'acr-pill-signed' : 'acr-pill-unsigned'}`}>{c.firmataDaMe ? 'FIRMATA' : 'DA FIRMARE'}</span>
+                <div className="acr-display" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--anthracite)' }}>
+                  {c.nome}
+                </div>
+                <span
+                  className={`acr-mono ${c.firmataDaMe ? 'acr-pill-signed' : 'acr-pill-unsigned'}`}
+                >
+                  {c.firmataDaMe ? 'FIRMATA' : 'DA FIRMARE'}
+                </span>
               </div>
+
               {c.firmatari.length > 0 && (
                 <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--ink-soft)', marginTop: '10px' }}>
                   Hanno firmato oggi: <strong>{c.firmatari.join(', ')}</strong>
@@ -123,6 +201,7 @@ export default function Home() {
             </div>
           </button>
         ))}
+
       </div>
     </div>
   )
