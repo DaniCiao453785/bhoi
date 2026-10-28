@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { BarChart3, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import SectionHeader from '../components/SectionHeader'
 
@@ -18,25 +19,75 @@ export default function Statistiche() {
       const storico = (presenze || []).filter(p => p.ragazzo_id === r.id)
       const registrate = storico.length
       const assenze = storico.filter(p => p.presente === false).length
-      return { ...r, registrate, assenze, presenze: storico.filter(p => p.presente === true).length, percentuale: registrate ? Math.round((registrate - assenze) / registrate * 100) : null }
+      return { 
+        ...r, 
+        registrate, 
+        assenze, 
+        presenze: storico.filter(p => p.presente === true).length, 
+        percentuale: registrate ? Math.round((registrate - assenze) / registrate * 100) : null 
+      }
     }))
     setCaricamento(false)
   }
 
-  return <div style={{minHeight:'100vh'}}>
-    <SectionHeader classeId={id} titolo="Statistiche presenze" />
-    <div style={{padding:18,display:'flex',flexDirection:'column',gap:12}}>
-      <p style={{margin:0,color:'var(--ink-soft)',fontSize:13}}>Riepilogo basato sulle presenze registrate nel sistema.</p>
-      {caricamento && <p>Caricamento statistiche…</p>}
-      {!caricamento && righe.map(r => <div className="acr-card" key={r.id} style={{padding:16}}>
-        <div style={{fontWeight:600}}>{r.nome} {r.cognome}</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginTop:12}}>
-          <div><div style={{fontSize:11,color:'var(--ink-soft)'}}>Presente</div><strong>{r.presenze}</strong></div>
-          <div><div style={{fontSize:11,color:'var(--ink-soft)'}}>Assenze</div><strong>{r.assenze}</strong></div>
-          <div><div style={{fontSize:11,color:'var(--ink-soft)'}}>Frequenza</div><strong>{r.percentuale === null ? '—' : `${r.percentuale}%`}</strong></div>
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '40px' }}>
+      <SectionHeader classeId={id} titolo="Statistiche presenze" />
+
+      <div style={{ maxWidth: '720px', margin: '24px auto 0', padding: '0 var(--page-padding)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--ink-soft)' }}>
+          <BarChart3 size={18} color="var(--purple)" />
+          <span style={{ fontSize: '14px', fontWeight: '500' }}>Riepilogo basato sulle presenze registrate nel sistema.</span>
         </div>
-      </div>)}
-      {!caricamento && righe.length === 0 && <p>Nessun ragazzo registrato in questa classe.</p>}
+
+        {caricamento && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="acr-card" style={{ padding: '20px' }}>
+                <div className="acr-skeleton acr-skeleton-title" style={{ width: '45%' }}></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '16px' }}>
+                  <div className="acr-skeleton acr-skeleton-text" style={{ height: '36px', width: '100%' }}></div>
+                  <div className="acr-skeleton acr-skeleton-text" style={{ height: '36px', width: '100%' }}></div>
+                  <div className="acr-skeleton acr-skeleton-text" style={{ height: '36px', width: '100%' }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!caricamento && righe.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {righe.map((r) => (
+              <div key={r.id} className="stat-card" style={{ padding: '20px' }}>
+                <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '700', fontSize: '16px', color: 'var(--anthracite)' }}>
+                  {r.nome} {r.cognome}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '14px', background: 'var(--surface-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--rule)' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>Presente</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--sage)', marginTop: '2px' }}>{r.presenze}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>Assenze</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--alert)', marginTop: '2px' }}>{r.assenze}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>Frequenza</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--purple)', marginTop: '2px' }}>{r.percentuale === null ? '—' : `${r.percentuale}%`}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!caricamento && righe.length === 0 && (
+          <div className="acr-card" style={{ padding: '40px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <Users size={32} color="var(--ink-soft)" />
+            <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '600', color: 'var(--anthracite)' }}>Nessun ragazzo registrato</span>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
+  )
 }
