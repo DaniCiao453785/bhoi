@@ -35,11 +35,14 @@ export default function Statistiche() {
       <SectionHeader classeId={id} titolo="Statistiche presenze" />
 
       <div style={{ maxWidth: '720px', margin: '24px auto 0', padding: '0 var(--page-padding)' }}>
+        
+        {/* Descrizione sottile */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--ink-soft)' }}>
           <BarChart3 size={18} color="var(--purple)" />
           <span style={{ fontSize: '14px', fontWeight: '500' }}>Riepilogo basato sulle presenze registrate nel sistema.</span>
         </div>
 
+        {/* Stato di Caricamento con Skeleton */}
         {caricamento && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {[1, 2, 3].map((n) => (
@@ -55,6 +58,7 @@ export default function Statistiche() {
           </div>
         )}
 
+        {/* Lista Statistiche Ragazzi */}
         {!caricamento && righe.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {righe.map((r) => (
@@ -62,31 +66,45 @@ export default function Statistiche() {
                 <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '700', fontSize: '16px', color: 'var(--anthracite)' }}>
                   {r.nome} {r.cognome}
                 </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '14px', background: 'var(--surface-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--rule)' }}>
+                  
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>Presente</div>
-                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--sage)', marginTop: '2px' }}>{r.presenze}</div>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Presente</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--sage)', marginTop: '2px' }}>
+                      {r.presenze}
+                    </div>
                   </div>
+
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>Assenze</div>
-                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--alert)', marginTop: '2px' }}>{r.assenze}</div>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Assenze</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--alert)', marginTop: '2px' }}>
+                      {r.assenze}
+                    </div>
                   </div>
+
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>Frequenza</div>
-                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--purple)', marginTop: '2px' }}>{r.percentuale === null ? '—' : `${r.percentuale}%`}</div>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Frequenza</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: '700', color: 'var(--purple)', marginTop: '2px' }}>
+                      {r.percentuale === null ? '—' : `${r.percentuale}%`}
+                    </div>
                   </div>
+
                 </div>
               </div>
             ))}
           </div>
         )}
 
+        {/* Stato Vuoto */}
         {!caricamento && righe.length === 0 && (
           <div className="acr-card" style={{ padding: '40px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <Users size={32} color="var(--ink-soft)" />
             <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '600', color: 'var(--anthracite)' }}>Nessun ragazzo registrato</span>
+            <p style={{ margin: 0, fontSize: '14px', color: 'var(--ink-soft)' }}>Non ci sono ancora ragazzi inseriti in questa classe.</p>
           </div>
         )}
+
       </div>
     </div>
   )
