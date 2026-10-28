@@ -16,13 +16,21 @@ function formattaData(iso) {
   return 'il ' + d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })
 }
 
-const GESTIONE = [
-  { path: 'presenze-educatori', label: 'Presenze educatori', icon: Users },
-  { path: 'presenze-ragazzi', label: 'Presenze ragazzi', icon: ClipboardList },
-  { path: 'statistiche', label: 'Statistiche', icon: Calendar },
-  { path: 'tematiche', label: 'Tematiche', icon: BookOpen },
-  { path: 'ragazzi', label: 'Elenco ragazzi', icon: Calendar },
-]
+// Funzione helper per determinare se si tratta di Bambini (dall'infanzia alla 4ª elem) o Ragazzi (dalla 5ª elem in su)
+function etichettaFascia(nomeClasse) {
+  if (!nomeClasse) return 'partecipanti'
+  const nomeLower = nomeClasse.toLowerCase()
+  if (
+    nomeLower.includes('infanzia') || 
+    nomeLower.includes('1') || 
+    nomeLower.includes('2') || 
+    nomeLower.includes('3') || 
+    nomeLower.includes('4')
+  ) {
+    return 'bambini'
+  }
+  return 'ragazzi'
+}
 
 export default function Classe() {
   const { id } = useParams()
@@ -93,6 +101,15 @@ export default function Classe() {
   if (!classe) return null
 
   const sbloccaGestione = true
+  const fascia = etichettaFascia(classe.nome)
+
+  const GESTIONE = [
+    { path: 'presenze-educatori', label: 'Presenze educatori', icon: Users },
+    { path: 'presenze-ragazzi', label: `Presenze ${fascia}`, icon: ClipboardList },
+    { path: 'statistiche', label: 'Statistiche', icon: Calendar },
+    { path: 'tematiche', label: 'Tematiche', icon: BookOpen },
+    { path: 'ragazzi', label: `Elenco ${fascia}`, icon: Calendar },
+  ]
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '40px' }}>
@@ -189,7 +206,7 @@ export default function Classe() {
                   <div style={{ background: 'var(--brand-soft)', width: '38px', height: '38px', borderRadius: 'var(--radius-sm)', display: 'grid', placeItems: 'center' }}>
                     <Icon size={20} color="var(--purple)" />
                   </div>
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--anthracite)', marginTop: '4px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--anthracite)', marginTop: '4px', textTransform: 'capitalize' }}>
                     {label}
                   </span>
                 </button>
