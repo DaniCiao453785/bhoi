@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
@@ -42,12 +42,14 @@ export default function CalendarioComune({ classeId, onSelectDay }) {
     setTematicaGiorno(null)
     const dataISO = toISO(year, month, d)
     onSelectDay?.(dataISO)
+    
     const { data } = await supabase
       .from('tematiche')
       .select('titolo, descrizione')
       .eq('classe_id', classeId)
       .eq('data', dataISO)
       .maybeSingle()
+      
     setTematicaGiorno(data || false) // false = caricata ma assente
   }
 
@@ -60,14 +62,39 @@ export default function CalendarioComune({ classeId, onSelectDay }) {
   const meseLabel = cursor.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="cal-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button className="cal-nav-btn" onClick={() => setCursor(new Date(year, month - 1, 1))}><ChevronLeft size={16} /></button>
-        <span className="acr-display" style={{ fontSize: 15, textTransform: 'capitalize' }}>{meseLabel}</span>
-        <button className="cal-nav-btn" onClick={() => setCursor(new Date(year, month + 1, 1))}><ChevronRight size={16} /></button>
+    <div className="cal-card" style={{ padding: '20px' }}>
+      
+      {/* Header Navigazione Mese */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <button
+          className="cal-nav-btn"
+          onClick={() => setCursor(new Date(year, month - 1, 1))}
+          style={{ cursor: 'pointer' }}
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        <span className="acr-display" style={{ fontSize: '16px', fontWeight: '700', textTransform: 'capitalize', color: 'var(--anthracite)' }}>
+          {meseLabel}
+        </span>
+
+        <button
+          className="cal-nav-btn"
+          onClick={() => setCursor(new Date(year, month + 1, 1))}
+          style={{ cursor: 'pointer' }}
+        >
+          <ChevronRight size={18} />
+        </button>
       </div>
+
+      {/* Griglia Calendario */}
       <div className="cal-grid">
-        {GIORNI.map((d) => <div key={d} className="cal-head">{d}</div>)}
+        {GIORNI.map((d) => (
+          <div key={d} className="cal-head" style={{ fontWeight: '700', fontSize: '12px', color: 'var(--ink-soft)' }}>
+            {d}
+          </div>
+        ))}
+
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="cal-day empty" />
           const haDati = giorniConDati.has(toISO(year, month, d))
@@ -78,30 +105,47 @@ export default function CalendarioComune({ classeId, onSelectDay }) {
               className={`cal-day ${isToday(d) ? 'today' : ''} ${sel ? 'selected' : ''}`}
               onClick={() => selezionaGiorno(d)}
             >
-              {d}
+              <span>{d}</span>
               {haDati && <span className="cal-dot" style={{ background: 'var(--sage)' }} />}
             </button>
           )
         })}
       </div>
+
+      {/* Box Dettaglio Tematica del Giorno Selezionato */}
       {selected && (
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--rule)', fontSize: 13, color: 'var(--ink-soft)' }}>
-          {tematicaGiorno === null && 'Caricamento…'}
-          {tematicaGiorno === false && 'Nessuna tematica per questo giorno'}
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--rule)', fontSize: '13px', color: 'var(--ink-soft)' }}>
+          {tematicaGiorno === null && <span style={{ fontStyle: 'italic' }}>Caricamento tematica…</span>}
+          {tematicaGiorno === false && <span>Nessuna tematica registrata per questo giorno.</span>}
           {tematicaGiorno && (
-            <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <button
                 onClick={() => setMostraDescrizione((v) => !v)}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--ink)', fontSize: 13, textAlign: 'left' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  color: 'var(--purple-dark)',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
               >
-                Tematica: "{tematicaGiorno.titolo}" {mostraDescrizione ? '▲' : '▼'}
+                <BookOpen size={15} color="var(--purple)" />
+                <span>Tematica: "{tematicaGiorno.titolo}"</span>
+                <span style={{ fontSize: '10px', marginLeft: 'auto' }}>{mostraDescrizione ? '▲ Riduci' : '▼ Dettagli'}</span>
               </button>
+
               {mostraDescrizione && (
-                <div style={{ marginTop: 8, color: 'var(--ink-soft)' }}>
-                  {tematicaGiorno.descrizione || 'Nessuna descrizione aggiunta'}
+                <div style={{ marginTop: '4px', padding: '10px 12px', background: 'var(--surface-subtle)', borderRadius: 'var(--radius-sm)', color: 'var(--anthracite)', fontSize: '13px', lineHeight: '1.4' }}>
+                  {tematicaGiorno.descrizione || 'Nessuna descrizione testuale aggiunta per questo incontro.'}
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       )}
