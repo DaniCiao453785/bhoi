@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, PlusCircle, UserCheck, UserPlus, FileCheck, CheckCircle2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { ordinaEducatori } from '../lib/ordinaNomi'
 import { useAuth } from '../context/AuthContext'
@@ -18,9 +18,8 @@ export default function Aggiunta() {
   const [classi, setClassi] = useState([])
   const [educatori, setEducatori] = useState([])
   const [classeSelId, setClasseSelId] = useState(null)
-  const [assegnatiSel, setAssegnatiSel] = useState([]) // id degli educatori assegnati alla classe selezionata
+  const [assegnatiSel, setAssegnatiSel] = useState([])
   const [nonFirmate, setNonFirmate] = useState([])
-
   const [nomeClasse, setNomeClasse] = useState('')
 
   const [nome, setNome] = useState('')
@@ -31,7 +30,6 @@ export default function Aggiunta() {
 
   useEffect(() => {
     caricaClassi()
-    // niente password: si scaricano solo i campi che servono
     supabase.from('educatori').select('id, nome').then(({ data }) => setEducatori(ordinaEducatori(data || [])))
   }, [])
 
@@ -50,7 +48,6 @@ export default function Aggiunta() {
     setClassi(data)
     if (data.length && !classeSelId) setClasseSelId(data[0].id)
 
-    // classi non ancora firmate oggi da nessuno
     const { data: firme } = await supabase.from('firme').select('classe_id').eq('data', oggiISO())
     const idsFirmati = new Set((firme || []).map((f) => f.classe_id))
     setNonFirmate((data || []).filter((c) => !idsFirmati.has(c.id)))
@@ -59,7 +56,6 @@ export default function Aggiunta() {
   async function creaClasse(e) {
     e.preventDefault()
     if (!nomeClasse.trim()) return
-    // la nuova classe va in fondo all'elenco
     const prossimoOrdine = Math.max(0, ...classi.map((c) => c.ordine ?? 0)) + 1
     await supabase.from('classi').insert({ nome: nomeClasse.trim(), ordine: prossimoOrdine })
     setNomeClasse('')
@@ -89,7 +85,7 @@ export default function Aggiunta() {
     })
     setNome(''); setCognome(''); setEta(''); setIntolleranze('')
     setRagazzoSalvato(true)
-    setTimeout(() => setRagazzoSalvato(false), 1800)
+    setTimeout(() => setRagazzoSalvato(false), 2000)
   }
 
   async function firmaPerLoro(classeId) {
@@ -98,135 +94,99 @@ export default function Aggiunta() {
       educatore_id: educatore.id,
       data: oggiISO(),
     }, { onConflict: 'classe_id,educatore_id,data' })
+
     await supabase.from('presenze_educatori').upsert({
       classe_id: classeId,
       educatore_id: educatore.id,
       data: oggiISO(),
       presente: true,
     }, { onConflict: 'classe_id,educatore_id,data' })
+
     caricaClassi()
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <div className="acr-band" style={{ padding: '20px 20px' }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{ background: 'none', border: 'none', color: 'var(--paper)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: 0, marginBottom: 14 }}
-        >
-          <ChevronLeft size={18} /> <span style={{ fontSize: 14 }}>Home</span>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '40px' }}>
+      <div className="acr-band" style={{ padding: '24px 20px 28px' }}>
+        <button onClick={() => navigate('/')} style={{ background: 'rgba(255, 255, 255, 0.12)', border: 'none', color: '#FFFFFF', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', marginBottom: '16px', fontSize: '13px', fontWeight: '600' }}>
+          <ChevronLeft size={16} /> Home
         </button>
-        <div className="acr-display" style={{ fontSize: 20, fontWeight: 600 }}>Aggiunta</div>
-        <div style={{ opacity: 0.9, fontSize: 13 }}>Pannello moderatore</div>
+        <div className="acr-display" style={{ fontSize: '24px', fontWeight: '700', color: '#FFFFFF' }}>Gestione Moderatore</div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, padding: '16px 18px 0', flexWrap: 'wrap' }}>
-        {[
-          { key: 'classi', label: 'Nuova classe' },
-          { key: 'assegna', label: 'Assegna educatori' },
-          { key: 'ragazzi', label: 'Aggiungi ragazzo' },
-          { key: 'firma', label: 'Firma per loro' },
-        ].map((s) => (
-          <button key={s.key} className={`chip ${sezione === s.key ? 'active' : ''}`} onClick={() => setSezione(s.key)}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {sezione === 'classi' && (
-        <form onSubmit={creaClasse} className="acr-card" style={{ margin: 18, padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Nome classe</label>
-            <input className="acr-input" value={nomeClasse} onChange={(e) => setNomeClasse(e.target.value)} required placeholder='es. "3ª Media"' />
-          </div>
-          <button className="acr-btn-primary">Crea classe</button>
-        </form>
-      )}
-
-      {sezione === 'assegna' && (
-        <div style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, fontFamily: "'IBM Plex Mono', monospace" }}>SCEGLI LA CLASSE</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            {classi.map((c) => (
-              <button key={c.id} className={`chip ${classeSelId === c.id ? 'active' : ''}`} onClick={() => setClasseSelId(c.id)}>
-                {c.nome}
+      <div style={{ maxWidth: '680px', margin: '20px auto 0', padding: '0 var(--page-padding)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            { key: 'classi', label: 'Nuova classe', icon: PlusCircle },
+            { key: 'assegna', label: 'Assegna educatori', icon: UserCheck },
+            { key: 'ragazzi', label: 'Aggiungi ragazzo', icon: UserPlus },
+            { key: 'firma', label: 'Firma per loro', icon: FileCheck },
+          ].map((s) => {
+            const Icon = s.icon
+            const isActive = sezione === s.key
+            return (
+              <button key={s.key} className={`chip ${isActive ? 'active' : ''}`} onClick={() => setSezione(s.key)}>
+                <Icon size={15} />
+                {s.label}
               </button>
-            ))}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, fontFamily: "'IBM Plex Mono', monospace" }}>EDUCATORI</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {educatori.map((ed) => {
-              const assegnato = assegnatiSel.includes(ed.id)
-              return (
-                <button
-                  key={ed.id}
-                  className="acr-card"
-                  style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left', width: '100%' }}
-                  onClick={() => toggleAssegnazione(ed.id)}
-                >
-                  <span>{ed.nome}</span>
-                  <span className={`acr-mono ${assegnato ? 'acr-pill-signed' : 'acr-pill-unsigned'}`} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20 }}>
-                    {assegnato ? 'ASSEGNATO' : 'NON ASSEGNATO'}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+            )
+          })}
         </div>
-      )}
 
-      {sezione === 'ragazzi' && (
-        <div style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, fontFamily: "'IBM Plex Mono', monospace" }}>CLASSE DI DESTINAZIONE</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            {classi.map((c) => (
-              <button key={c.id} className={`chip ${classeSelId === c.id ? 'active' : ''}`} onClick={() => setClasseSelId(c.id)}>
-                {c.nome}
-              </button>
-            ))}
-          </div>
-          <form onSubmit={aggiungiRagazzo} className="acr-card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Nome</label>
-                <input className="acr-input" value={nome} onChange={(e) => setNome(e.target.value)} required />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Cognome</label>
-                <input className="acr-input" value={cognome} onChange={(e) => setCognome(e.target.value)} required />
-              </div>
-            </div>
+        {sezione === 'classi' && (
+          <form onSubmit={creaClasse} className="acr-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <h3 style={{ margin: 0, fontFamily: 'Poppins, sans-serif', fontSize: '16px', fontWeight: '700', color: 'var(--anthracite)' }}>Crea una Nuova Classe</h3>
             <div>
-              <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Età</label>
-              <input className="acr-input" type="number" min="0" value={eta} onChange={(e) => setEta(e.target.value)} />
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase' }}>Nome della classe *</label>
+              <input className="acr-input" value={nomeClasse} onChange={(e) => setNomeClasse(e.target.value)} required placeholder='es. "3ª Media"' />
             </div>
-            <div>
-              <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Intolleranze (opzionale)</label>
-              <input className="acr-input" value={intolleranze} onChange={(e) => setIntolleranze(e.target.value)} />
-            </div>
-            <button className="acr-btn-primary">{ragazzoSalvato ? 'Aggiunto ✓' : 'Salva ragazzo'}</button>
+            <button type="submit" className="acr-btn-primary">Crea classe</button>
           </form>
-        </div>
-      )}
+        )}
 
-      {sezione === 'firma' && (
-        <div style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, fontFamily: "'IBM Plex Mono', monospace" }}>CLASSI NON ANCORA FIRMATE OGGI</div>
-          {nonFirmate.length === 0 && (
-            <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Tutte le classi hanno già almeno una firma.</div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {nonFirmate.map((c) => (
-              <div key={c.id} className="acr-card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                <span>{c.nome}</span>
-                <button className="acr-btn-primary" style={{ padding: '8px 14px', fontSize: 13, flexShrink: 0 }} onClick={() => firmaPerLoro(c.id)}>
-                  Firma per loro
-                </button>
+        {sezione === 'assegna' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="acr-card" style={{ padding: '18px 20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '10px', textTransform: 'uppercase' }}>1. Scegli la classe</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {classi.map((c) => (
+                  <button key={c.id} className={`chip ${classeSelId === c.id ? 'active' : ''}`} onClick={() => setClasseSelId(c.id)}>{c.nome}</button>
+                ))}
               </div>
-            ))}
+            </div>
+            <div className="acr-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase' }}>2. Assegna gli educatori</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {educatori.map((ed) => {
+                  const assegnato = assegnatiSel.includes(ed.id)
+                  return (
+                    <button key={ed.id} className="acr-card" style={{ padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left', width: '100%' }} onClick={() => toggleAssegnazione(ed.id)}>
+                      <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '600', fontSize: '15px', color: 'var(--anthracite)' }}>{ed.nome}</span>
+                      <span className={`acr-mono ${assegnato ? 'acr-pill-signed' : 'acr-pill-unsigned'}`}>{assegnato ? 'ASSEGNATO' : 'NON ASSEGNATO'}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
+        )}
+
+        {sezione === 'ragazzi' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="acr-card" style={{ padding: '18px 20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '10px', textTransform: 'uppercase' }}>Classe di destinazione</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {classi.map((c) => (
+                  <button key={c.id} className={`chip ${classeSelId === c.id ? 'active' : ''}`} onClick={() => setClasseSelId(c.id)}>{c.nome}</button>
+                ))}
+              </div>
+            </div>
+            <form onSubmit={aggiungiRagazzo} className="acr-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <h3 style={{ margin: 0, fontFamily: 'Poppins, sans-serif', fontSize: '16px', fontWeight: '700', color: 'var(--anthracite)' }}>Dettagli Partecipante</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase' }}>Nome *</label>
+                  <input className="acr-input" value={nome} onChange={(e) => setNome(e.target.value)} required placeholder="Es. Marco" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink
