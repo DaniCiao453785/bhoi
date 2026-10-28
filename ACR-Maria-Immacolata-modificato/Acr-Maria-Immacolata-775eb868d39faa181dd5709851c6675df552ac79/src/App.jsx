@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -10,35 +10,56 @@ import Tematiche from './pages/Tematiche'
 import Ragazzi from './pages/Ragazzi'
 import Aggiunta from './pages/Aggiunta'
 
-function RottaProtetta({ children }) {
+function LoadingScreen() {
+  return (
+    <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: '20px', background: 'var(--bg)' }}>
+      <div className="acr-card" style={{ padding: '36px 32px', textAlign: 'center', maxWidth: '360px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <div style={{ width: '48px', height: '48px', border: '4px solid var(--brand-soft)', borderTopColor: 'var(--purple)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <span className="acr-display" style={{ fontSize: '18px', color: 'var(--anthracite)' }}>Caricamento Portale...</span>
+        <div className="acr-skeleton acr-skeleton-text" style={{ width: '70%', margin: 0 }} />
+      </div>
+    </div>
+  )
+}
+
+function Guard({ children, soloModeratore = false }) {
   const { educatore, loading } = useAuth()
-  if (loading) return null
-  if (!educatore) return <Navigate to="/login" replace />
+  const location = useLocation()
+
+  if (loading) return <LoadingScreen />
+  if (!educatore) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (soloModeratore && !educatore.moderatore) return <Navigate to="/" replace />
   return children
 }
 
-function RottaModeratore({ children }) {
-  const { educatore, loading } = useAuth()
-  if (loading) return null
-  if (!educatore) return <Navigate to="/login" replace />
-  if (!educatore.moderatore) return <Navigate to="/" replace />
-  return children
+function NotFound() {
+  return (
+    <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 'var(--page-padding)', background: 'var(--bg)' }}>
+      <div className="acr-card" style={{ maxWidth: '420px', width: '100%', padding: '40px 28px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
+        <span className="acr-pill-unsigned" style={{ fontSize: '12px', padding: '6px 14px' }}>Errore 404</span>
+        <h1 className="acr-display" style={{ fontSize: '56px', margin: 0, color: 'var(--purple)' }}>404</h1>
+        <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: '15px', lineHeight: 1.5 }}>Ops! La pagina che stavi cercando non esiste o è stata spostata.</p>
+        <a href="/" className="acr-btn-primary" style={{ marginTop: '8px', width: '100%' }}>Torna alla Home</a>
+      </div>
+    </div>
+  )
 }
 
 function Rotte() {
-  const { loading } = useAuth()
-  if (loading) return null
+  const { educatore, loading } = useAuth()
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<RottaProtetta><Home /></RottaProtetta>} />
-      <Route path="/classe/:id" element={<RottaProtetta><Classe /></RottaProtetta>} />
-      <Route path="/classe/:id/presenze-educatori" element={<RottaProtetta><PresenzeEducatori /></RottaProtetta>} />
-      <Route path="/classe/:id/presenze-ragazzi" element={<RottaProtetta><PresenzeRagazzi /></RottaProtetta>} />
-      <Route path="/classe/:id/statistiche" element={<RottaProtetta><Statistiche /></RottaProtetta>} />
-      <Route path="/classe/:id/tematiche" element={<RottaProtetta><Tematiche /></RottaProtetta>} />
-      <Route path="/classe/:id/ragazzi" element={<RottaProtetta><Ragazzi /></RottaProtetta>} />
-      <Route path="/aggiunta" element={<RottaModeratore><Aggiunta /></RottaModeratore>} />
+      <Route path="/login" element={loading ? <LoadingScreen /> : educatore ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/" element={<Guard><Home /></Guard>} />
+      <Route path="/classe/:id" element={<Guard><Classe /></Guard>} />
+      <Route path="/classe/:id/presenze-educatori" element={<Guard><PresenzeEducatori /></Guard>} />
+      <Route path="/classe/:id/presenze-ragazzi" element={<Guard><PresenzeRagazzi /></Guard>} />
+      <Route path="/classe/:id/statistiche" element={<Guard><Statistiche /></Guard>} />
+      <Route path="/classe/:id/tematiche" element={<Guard><Tematiche /></Guard>} />
+      <Route path="/classe/:id/ragazzi" element={<Guard><Ragazzi /></Guard>} />
+      <Route path="/aggiunta" element={<Guard soloModeratore><Aggiunta /></Guard>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }
