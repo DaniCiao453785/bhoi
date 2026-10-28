@@ -18,7 +18,9 @@ export default function Tematiche() {
   const [esisteGia, setEsisteGia] = useState(false)
   const [salvato, setSalvato] = useState(false)
 
-  useEffect(() => { carica(giorno) }, [id, giorno])
+  useEffect(() => {
+    carica(giorno)
+  }, [id, giorno])
 
   async function carica(dataISO) {
     const { data } = await supabase
@@ -66,24 +68,54 @@ export default function Tematiche() {
       <SectionHeader classeId={id} titolo="Tematica" />
 
       <div style={{ maxWidth: '640px', margin: '24px auto 0', padding: '0 var(--page-padding)' }}>
+        
+        {/* Card principale del modulo */}
         <div className="acr-card" style={{ padding: '24px' }}>
+          
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase' }}>Seleziona Giorno</label>
-            <input className="acr-input" type="date" value={giorno} onChange={(e) => setGiorno(e.target.value)} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Seleziona Giorno
+            </label>
+            <input
+              className="acr-input"
+              type="date"
+              value={giorno}
+              onChange={(e) => setGiorno(e.target.value)}
+            />
           </div>
 
           <form onSubmit={salva}>
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase' }}>Titolo Tematica</label>
-              <input className="acr-input" value={titolo} onChange={(e) => setTitolo(e.target.value)} placeholder="Es. La parabola del seminatore" required />
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                Titolo Tematica
+              </label>
+              <input
+                className="acr-input"
+                value={titolo}
+                onChange={(e) => setTitolo(e.target.value)}
+                placeholder="Es. La parabola del seminatore"
+                required
+              />
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase' }}>Descrizione e Note</label>
-              <textarea className="acr-input" style={{ resize: 'vertical', minHeight: '120px' }} value={descrizione} onChange={(e) => setDescrizione(e.target.value)} placeholder="Inserisci i dettagli..." />
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                Descrizione e Note
+              </label>
+              <textarea
+                className="acr-input"
+                style={{ resize: 'vertical', minHeight: '120px' }}
+                value={descrizione}
+                onChange={(e) => setDescrizione(e.target.value)}
+                placeholder="Inserisci i dettagli dell'incontro, attività o spunti di riflessione..."
+              />
             </div>
 
-            <button type="submit" className="acr-btn-primary" style={{ width: '100%', gap: '8px' }}>
+            <button
+              type="submit"
+              className="acr-btn-primary"
+              style={{ width: '100%', gap: '8px' }}
+            >
               <BookmarkPlus size={18} />
               {esisteGia ? 'Aggiorna tematica' : 'Salva tematica'}
             </button>
@@ -91,7 +123,26 @@ export default function Tematiche() {
 
           {esisteGia && (
             <div style={{ marginTop: '16px', borderTop: '1px solid var(--rule)', paddingTop: '16px' }}>
-              <button type="button" onClick={elimina} style={{ width: '100%', background: 'var(--alert-soft)', border: '1px solid #FEE2E2', color: 'var(--alert)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
+              <button
+                type="button"
+                onClick={elimina}
+                style={{
+                  width: '100%',
+                  background: 'var(--alert-soft)',
+                  border: '1px solid #FEE2E2',
+                  color: 'var(--alert)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  padding: '12px',
+                  borderRadius: 'var(--radius-sm)',
+                  transition: 'background 160ms ease',
+                }}
+              >
                 <Trash2 size={16} /> Elimina tematica di questo giorno
               </button>
             </div>
@@ -99,6 +150,7 @@ export default function Tematiche() {
         </div>
       </div>
 
+      {/* Toast di Notifica Salvataggio */}
       {salvato && (
         <div className="acr-toast">
           <CheckCircle2 size={20} color="var(--mint)" />
