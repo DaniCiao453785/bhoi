@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, Check, PenLine, Users, ClipboardList, BookOpen, Calendar } from 'lucide-react'
+import { ChevronLeft, Check, PenLine, Users, ClipboardList, BookOpen, Calendar, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { ordinaStringhe } from '../lib/ordinaNomi'
@@ -31,15 +31,11 @@ export default function Classe() {
   const [classe, setClasse] = useState(null)
   const isModerator = !!educatore?.moderatore
 
-  // giorno su cui si sta firmando: di default oggi, ma si può scegliere
-  // qualsiasi altro giorno dal calendario
   const [giornoFirma, setGiornoFirma] = useState(oggiISO())
   const [firmataDaMe, setFirmataDaMe] = useState(false)
   const [firmatari, setFirmatari] = useState([])
   const [firmando, setFirmando] = useState(false)
-
-  // stato "oggi" separato: serve solo per sapere se la gestione è sbloccata
-  const [qualcunoHaFirmatoOggi, setQualcunoHaFirmatoOggi] = useState(false)
+  const [, setQualcunoHaFirmatoOggi] = useState(false)
 
   useEffect(() => {
     supabase.from('classi').select('*').eq('id', id).single().then(({ data }) => setClasse(data))
@@ -77,8 +73,8 @@ export default function Classe() {
       educatore_id: educatore.id,
       data: giornoFirma,
     }, { onConflict: 'classe_id,educatore_id,data' })
+
     if (!error) {
-      // firmare implica essere presenti quel giorno: aggiorna anche le presenze educatori
       await supabase.from('presenze_educatori').upsert({
         classe_id: id,
         educatore_id: educatore.id,
@@ -93,69 +89,59 @@ export default function Classe() {
 
   if (!classe) return null
 
-  const sbloccaGestione = true
-
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <div className="acr-band" style={{ padding: '20px 20px' }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{ background: 'none', border: 'none', color: 'var(--paper)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: 0, marginBottom: 14 }}
-        >
-          <ChevronLeft size={18} /> <span style={{ fontSize: 14 }}>Classi</span>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '40px' }}>
+      <div className="acr-band" style={{ padding: '24px 20px 28px' }}>
+        <button onClick={() => navigate('/')} style={{ background: 'rgba(255, 255, 255, 0.12)', border: 'none', color: '#FFFFFF', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', marginBottom: '16px', fontSize: '13px', fontWeight: '600' }}>
+          <ChevronLeft size={16} /> Tutte le Classi
         </button>
-        <div className="acr-display" style={{ fontSize: 22, fontWeight: 600 }}>{classe.nome}</div>
+        <div className="acr-display" style={{ fontSize: '24px', fontWeight: '700', color: '#FFFFFF' }}>{classe.nome}</div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '20px 18px 4px' }}>
-        <div className="stamp-wrap-sm">
-          <button
-            className="stamp-btn-sm"
-            disabled={!firmaConsentita || (firmataDaMe && !isModerator) || firmando}
-            onClick={handleFirma}
-            title={isModerator && firmataDaMe ? 'Rifirma come moderatore' : undefined}
-          >
-            {firmataDaMe ? (isModerator ? <PenLine size={20} /> : '') : 'FIRMA'}
-          </button>
-          {firmataDaMe && !isModerator && (
-            <div className="stamp-mark-sm">
-              <Check size={22} />
+      <div style={{ maxWidth: '680px', margin: '24px auto 0', padding: '0 var(--page-padding)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="acr-card" style={{ padding: '22px 20px', display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
+          <div className="stamp-wrap-sm">
+            <button className="stamp-btn-sm" disabled={!firmaConsentita || (firmataDaMe && !isModerator) || firmando} onClick={handleFirma} title={isModerator && firmataDaMe ? 'Rifirma come moderatore' : undefined}>
+              {firmataDaMe ? (isModerator ? <PenLine size={22} color="var(--anthracite)" /> : '') : 'FIRMA'}
+            </button>
+            {firmataDaMe && !isModerator && (
+              <div className="stamp-mark-sm"><Check size={24} /></div>
+            )}
+          </div>
+
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            {!firmaConsentita && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '700', color: 'var(--coral)', background: 'rgba(255, 92, 92, 0.1)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', marginBottom: '8px' }}>
+                <AlertCircle size={13} /> Firma attiva solo Sabato e Domenica
+              </div>
+            )}
+            <div className="acr-mono" style={{ fontSize: '12px', fontWeight: '700', color: firmataDaMe ? 'var(--sage)' : 'var(--purple-dark)' }}>
+              {firmataDaMe ? `HAI FIRMATO ${formattaData(giornoFirma).toUpperCase()}` : `DA FIRMARE ${formattaData(giornoFirma).toUpperCase()}`}
             </div>
-          )}
+            {firmatari.length > 0 && (
+              <div style={{ fontSize: '13px', color: 'var(--ink-soft)', marginTop: '4px', fontWeight: '500' }}>
+                Hanno firmato: <strong style={{ color: 'var(--anthracite)' }}>{firmatari.join(', ')}</strong>
+              </div>
+            )}
+          </div>
         </div>
+
+        <div><CalendarioComune classeId={id} onSelectDay={setGiornoFirma} /></div>
+
         <div>
-          {!firmaConsentita && <div style={{fontSize:12,color:'var(--alert)',marginBottom:4}}>La firma è disponibile solo per sabato e domenica.</div>}
-          <div className="acr-mono" style={{ fontSize: 11, color: firmataDaMe ? 'var(--sage)' : 'var(--seal-dark)' }}>
-            {firmataDaMe ? `HAI FIRMATO ${formattaData(giornoFirma).toUpperCase()}` : `DA FIRMARE ${formattaData(giornoFirma).toUpperCase()}`}
-          </div>
-          {firmatari.length > 0 && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
-              Hanno firmato: {firmatari.join(', ')}
-            </div>
-          )}
-          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 4 }}>
-            Seleziona sabato o domenica per firmare
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: '18px 0 0' }}>
-        <CalendarioComune classeId={id} onSelectDay={setGiornoFirma} />
-      </div>
-
-      {sbloccaGestione && (
-        <div style={{ padding: '0 18px 30px' }}>
-          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 10, textAlign: 'center' }}>GESTIONE</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px', textAlign: 'center' }}>Pannello Gestione</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '14px' }}>
             {GESTIONE.map(({ path, label, icon: Icon }) => (
               <button key={path} className="mgmt-card" onClick={() => navigate(`/classe/${id}/${path}`)}>
-                <Icon size={20} color="var(--seal-dark)" />
-                <span style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
+                <div style={{ background: 'var(--brand-soft)', width: '38px', height: '38px', borderRadius: 'var(--radius-sm)', display: 'grid', placeItems: 'center' }}>
+                  <Icon size={20} color="var(--purple)" />
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--anthracite)', marginTop: '4px' }}>{label}</span>
               </button>
             ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
