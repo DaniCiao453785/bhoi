@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock } from 'lucide-react'
+import { Lock, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
@@ -27,59 +27,37 @@ export default function Login() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <div className="acr-band" style={{ padding: '48px 24px 40px' }}>
-        <div className="acr-display" style={{ fontSize: 26, fontWeight: 700 }}>Maria Immacolata</div>
-        <div style={{ opacity: 0.9, fontSize: 13, marginTop: 2 }}>ACR · Portale Educatori · Registro Firme</div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)' }}>
+      <div className="acr-band" style={{ padding: '52px 24px 60px' }}>
+        <div className="acr-display" style={{ fontSize: '28px', fontWeight: '700', color: '#FFFFFF' }}>Maria Immacolata</div>
+        <div style={{ opacity: 0.85, fontSize: '13px', marginTop: '4px', fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>ACR · Portale Educatori · Registro Firme</div>
       </div>
-      <div style={{ flex: 1, padding: '28px 20px', display: 'flex', justifyContent: 'center' }}>
-        <form
-          onSubmit={handleSubmit}
-          className="acr-card"
-          style={{ width: '100%', maxWidth: 360, padding: 28, marginTop: -32 }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22, color: 'var(--seal-dark)' }}>
-            <Lock size={16} />
-            <span className="acr-mono" style={{ fontSize: 12, letterSpacing: 1 }}>ACCESSO EDUCATORI</span>
+      <div style={{ flex: 1, padding: '0 20px 40px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+        <form onSubmit={handleSubmit} className="acr-card" style={{ width: '100%', maxWidth: '380px', padding: '32px 24px', marginTop: '-42px', background: '#FFFFFF', boxShadow: 'var(--shadow-hover)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', color: 'var(--purple-dark)' }}>
+            <Lock size={18} />
+            <span className="acr-mono" style={{ fontSize: '11px', letterSpacing: '0.05em', fontWeight: '700', textTransform: 'uppercase' }}>Accesso Educatori</span>
           </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Nome e cognome</label>
-            <input
-              className="acr-input"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="es. Rosanna Pica"
-              type="text"
-              name="nome_educatore"
-              inputMode="text"
-              autoComplete="off"
-              autoCapitalize="words"
-              autoCorrect="off"
-              spellCheck={false}
-              required
-            />
+          <div style={{ marginBottom: '18px' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Nome e cognome</label>
+            <input className="acr-input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="es. Rosanna Pica" type="text" name="nome_educatore" inputMode="text" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} required />
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Password</label>
-            <input
-              className="acr-input"
-              type="password"
-              name="password_educatore"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Password</label>
+            <input className="acr-input" type="password" name="password_educatore" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" required />
           </div>
           {errore && (
-            <div style={{ color: 'var(--alert)', fontSize: 13, marginBottom: 12 }}>{errore}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--alert)', background: 'var(--alert-soft)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: '13px', fontWeight: '600', marginBottom: '16px', border: '1px solid #FEE2E2' }}>
+              <AlertCircle size={16} />
+              <span>{errore}</span>
+            </div>
           )}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, margin: '12px 0 24px', cursor: 'pointer' }}>
-            <input type="checkbox" checked={ricordami} onChange={(e) => setRicordami(e.target.checked)} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '500', color: 'var(--anthracite)', margin: '16px 0 24px', cursor: 'pointer', userSelect: 'none' }}>
+            <input type="checkbox" checked={ricordami} onChange={(e) => setRicordami(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--purple)', cursor: 'pointer' }} />
             Ricordami su questo dispositivo
           </label>
-          <button className="acr-btn-primary" style={{ width: '100%' }} disabled={caricando}>
-            {caricando ? 'Accesso in corso…' : 'Accedi'}
+          <button type="submit" className="acr-btn-primary" style={{ width: '100%' }} disabled={caricando}>
+            {caricando ? 'Accesso in corso…' : 'Accedi al portale'}
           </button>
         </form>
       </div>
