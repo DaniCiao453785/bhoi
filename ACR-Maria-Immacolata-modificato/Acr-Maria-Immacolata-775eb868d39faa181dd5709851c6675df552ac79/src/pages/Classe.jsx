@@ -18,7 +18,7 @@ function formattaData(iso) {
 
 const GESTIONE = [
   { path: 'presenze-educatori', label: 'Presenze educatori', icon: Users },
-  { path: 'presenze-ragazzi', label: 'Presenze', icon: ClipboardList },
+  { path: 'presenze-ragazzi', label: 'Presenze ragazzi', icon: ClipboardList },
   { path: 'statistiche', label: 'Statistiche', icon: Calendar },
   { path: 'tematiche', label: 'Tematiche', icon: BookOpen },
   { path: 'ragazzi', label: 'Elenco ragazzi', icon: Calendar },
@@ -31,10 +31,13 @@ export default function Classe() {
   const [classe, setClasse] = useState(null)
   const isModerator = !!educatore?.moderatore
 
+  // giorno su cui si sta firmando: di default oggi, ma si può scegliere dal calendario
   const [giornoFirma, setGiornoFirma] = useState(oggiISO())
   const [firmataDaMe, setFirmataDaMe] = useState(false)
   const [firmatari, setFirmatari] = useState([])
   const [firmando, setFirmando] = useState(false)
+
+  // stato "oggi" separato per lo sblocco gestione
   const [, setQualcunoHaFirmatoOggi] = useState(false)
 
   useEffect(() => {
@@ -89,23 +92,55 @@ export default function Classe() {
 
   if (!classe) return null
 
+  const sbloccaGestione = true
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '40px' }}>
+      
+      {/* Header Band */}
       <div className="acr-band" style={{ padding: '24px 20px 28px' }}>
-        <button onClick={() => navigate('/')} style={{ background: 'rgba(255, 255, 255, 0.12)', border: 'none', color: '#FFFFFF', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', marginBottom: '16px', fontSize: '13px', fontWeight: '600' }}>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            background: 'rgba(255, 255, 255, 0.12)',
+            border: 'none',
+            color: '#FFFFFF',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-pill)',
+            marginBottom: '16px',
+            fontSize: '13px',
+            fontWeight: '600'
+          }}
+        >
           <ChevronLeft size={16} /> Tutte le Classi
         </button>
-        <div className="acr-display" style={{ fontSize: '24px', fontWeight: '700', color: '#FFFFFF' }}>{classe.nome}</div>
+        <div className="acr-display" style={{ fontSize: '24px', fontWeight: '700', color: '#FFFFFF' }}>
+          {classe.nome}
+        </div>
       </div>
 
       <div style={{ maxWidth: '680px', margin: '24px auto 0', padding: '0 var(--page-padding)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+        {/* Card Firma / Timbro */}
         <div className="acr-card" style={{ padding: '22px 20px', display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
+          
           <div className="stamp-wrap-sm">
-            <button className="stamp-btn-sm" disabled={!firmaConsentita || (firmataDaMe && !isModerator) || firmando} onClick={handleFirma} title={isModerator && firmataDaMe ? 'Rifirma come moderatore' : undefined}>
+            <button
+              className="stamp-btn-sm"
+              disabled={!firmaConsentita || (firmataDaMe && !isModerator) || firmando}
+              onClick={handleFirma}
+              title={isModerator && firmataDaMe ? 'Rifirma come moderatore' : undefined}
+            >
               {firmataDaMe ? (isModerator ? <PenLine size={22} color="var(--anthracite)" /> : '') : 'FIRMA'}
             </button>
             {firmataDaMe && !isModerator && (
-              <div className="stamp-mark-sm"><Check size={24} /></div>
+              <div className="stamp-mark-sm">
+                <Check size={24} />
+              </div>
             )}
           </div>
 
@@ -115,32 +150,54 @@ export default function Classe() {
                 <AlertCircle size={13} /> Firma attiva solo Sabato e Domenica
               </div>
             )}
-            <div className="acr-mono" style={{ fontSize: '12px', fontWeight: '700', color: firmataDaMe ? 'var(--sage)' : 'var(--purple-dark)' }}>
+
+            <div className="acr-mono" style={{ fontSize: '12px', letterSpacing: '0.02em', fontWeight: '700', color: firmataDaMe ? 'var(--sage)' : 'var(--purple-dark)' }}>
               {firmataDaMe ? `HAI FIRMATO ${formattaData(giornoFirma).toUpperCase()}` : `DA FIRMARE ${formattaData(giornoFirma).toUpperCase()}`}
             </div>
+
             {firmatari.length > 0 && (
               <div style={{ fontSize: '13px', color: 'var(--ink-soft)', marginTop: '4px', fontWeight: '500' }}>
                 Hanno firmato: <strong style={{ color: 'var(--anthracite)' }}>{firmatari.join(', ')}</strong>
               </div>
             )}
+
+            <div style={{ fontSize: '11px', color: 'var(--ink-soft)', marginTop: '6px' }}>
+              Seleziona un giorno dal calendario sottostante per consultare o firmare.
+            </div>
           </div>
         </div>
 
-        <div><CalendarioComune classeId={id} onSelectDay={setGiornoFirma} /></div>
-
+        {/* Calendario */}
         <div>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px', textAlign: 'center' }}>Pannello Gestione</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '14px' }}>
-            {GESTIONE.map(({ path, label, icon: Icon }) => (
-              <button key={path} className="mgmt-card" onClick={() => navigate(`/classe/${id}/${path}`)}>
-                <div style={{ background: 'var(--brand-soft)', width: '38px', height: '38px', borderRadius: 'var(--radius-sm)', display: 'grid', placeItems: 'center' }}>
-                  <Icon size={20} color="var(--purple)" />
-                </div>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--anthracite)', marginTop: '4px' }}>{label}</span>
-              </button>
-            ))}
-          </div>
+          <CalendarioComune classeId={id} onSelectDay={setGiornoFirma} />
         </div>
+
+        {/* Griglia Gestione */}
+        {sbloccaGestione && (
+          <div style={{ marginTop: '8px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px', textAlign: 'center' }}>
+              Pannello Gestione
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '14px' }}>
+              {GESTIONE.map(({ path, label, icon: Icon }) => (
+                <button
+                  key={path}
+                  className="mgmt-card"
+                  onClick={() => navigate(`/classe/${id}/${path}`)}
+                >
+                  <div style={{ background: 'var(--brand-soft)', width: '38px', height: '38px', borderRadius: 'var(--radius-sm)', display: 'grid', placeItems: 'center' }}>
+                    <Icon size={20} color="var(--purple)" />
+                  </div>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--anthracite)', marginTop: '4px' }}>
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )
